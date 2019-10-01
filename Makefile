@@ -25,24 +25,20 @@ include Makefile.common
 
 DOCKER_IMAGE_NAME       ?= prometheus
 
-.PHONY: react-app
-react-app:
+.PHONY: build-react-app
+build-react-app:
 	@echo ">> building React app"
 	@./scripts/build_react_app.sh
 
 .PHONY: assets
-assets: react-app
+assets: build-react-app
 	@echo ">> writing assets"
 	cd $(PREFIX)/web/ui && GO111MODULE=$(GO111MODULE) $(GO) generate -x -v $(GOOPTS)
 	@$(GOFMT) -w ./web/ui
 
-.PHONY: check_assets
-check_assets: assets
-	@echo ">> checking that assets are up-to-date"
-	@if ! (cd $(PREFIX)/web/ui && git diff --exit-code -- . ':(exclude)web/ui/static/graph-new'); then \
-		echo "Run 'make assets' and commit the changes to fix the error."; \
-		exit 1; \
-	fi
+.PHONY: build
+build: assets
+	$(MAKE) common-build
 
 build_tsdb:
 	GO111MODULE=$(GO111MODULE) $(GO) build -o $(TSDB_BIN) $(TSDB_CLI_DIR)
